@@ -1,7 +1,6 @@
 package kafkatool
 
 import (
-	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"io/ioutil"
@@ -9,16 +8,6 @@ import (
 
 	"github.com/Shopify/sarama"
 )
-
-type Kafkatool struct {
-	Addr   []string
-	Config *sarama.Config
-}
-
-type Producer struct {
-	AsyncProducer sarama.AsyncProducer
-	SyncProducer  sarama.SyncProducer
-}
 
 func NewKafkaTool(addr []string) *Kafkatool {
 	return &Kafkatool{
@@ -29,6 +18,15 @@ func NewKafkaTool(addr []string) *Kafkatool {
 
 func NewConfig() *sarama.Config {
 	return sarama.NewConfig()
+}
+
+func NewDefaultConfig() *sarama.Config {
+	config := sarama.NewConfig()
+	config.Producer.RequiredAcks = sarama.WaitForLocal
+	config.Producer.Return.Successes = true
+	config.Version = sarama.V0_10_2_1
+	config.Producer.Partitioner = sarama.NewHashPartitioner
+	return config
 }
 
 // 啥都不带
@@ -114,36 +112,4 @@ func (k *Kafkatool) NewConsumerWithConfig(config *sarama.Config) (sarama.Consume
 // 新建消费者组
 func (k *Kafkatool) NewConsumerGroup(groupID string) (sarama.ConsumerGroup, error) {
 	return sarama.NewConsumerGroup(k.Addr, groupID, k.Config)
-}
-
-type consumerGroupHandler struct {
-	Fn func(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim)
-}
-
-func (c consumerGroupHandler) Setup(_ sarama.ConsumerGroupSession) error { return nil }
-
-func (c consumerGroupHandler) Cleanup(_ sarama.ConsumerGroupSession) error { return nil }
-
-func (c consumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
-	c.Fn(sess, claim)
-	return nil
-}
-
-// 消费者组默认方法
-func (k *Kafkatool) DefaultConsumerGroupFn(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) {
-	for msg := range claim.Messages() {
-		log.Default().Println(msg)
-		sess.MarkMessage(msg, "")
-	}
-}
-
-// 消费者组处理
-func (k *Kafkatool) ConsumerGroupDo(consumerGroup sarama.ConsumerGroup, topic []string, ctx context.Context, f func(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim)) {
-	for {
-		handler := consumerGroupHandler{Fn: f}
-		err := consumerGroup.Consume(ctx, topic, handler)
-		if err != nil {
-			panic(any(err))
-		}
-	}
 }
