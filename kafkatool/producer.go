@@ -9,7 +9,7 @@ import (
 
 func (p *Producer) NewMsg(topic, value string) *sarama.ProducerMessage {
 	msg := &sarama.ProducerMessage{
-		Topic:     "xhs",
+		Topic:     topic,
 		Key:       sarama.StringEncoder(strconv.FormatInt(time.Now().UTC().UnixNano(), 10)),
 		Timestamp: time.Now(),
 		Value:     sarama.StringEncoder(value),
