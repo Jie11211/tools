@@ -30,27 +30,40 @@ func TestPack(t *testing.T) {
 	s.AddHook(0, &testHook{})
 	go s.ListenAndAccept(":9632")
 	time.Sleep(time.Second)
-
+	dp := tcptool.NewDataPack()
+	msg := &tcptool.Msg{
+		Id:     0,
+		Data:   []byte("server wyk"),
+		MsgLen: uint32(len([]byte("server wyk"))),
+	}
+	b := dp.Pack(*msg)
+	go func(ts *tcptool.Server, bs []byte) {
+		for {
+			for _, connTool := range ts.Conns {
+				connTool.Conn.Write(bs)
+			}
+		}
+	}(s, b)
 	c := tcptool.NewClient()
+	c.AddHook(0, &testHook{})
 	err := c.Dial("127.0.0.1:9632")
 	if err != nil {
 		fmt.Println(err)
 	}
-	dp := tcptool.NewDataPack()
-	msg := &tcptool.Msg{
+	msg = &tcptool.Msg{
 		Id:     0,
 		Data:   []byte("wyk"),
 		MsgLen: uint32(len([]byte("wyk"))),
 	}
-	b := dp.Pack(*msg)
+	b = dp.Pack(*msg)
+	go func(dp tcptool.DataPack, tc *tcptool.Client) {
+		c.Read(dp, c.Conn)
+	}(*dp, c)
 
-	for i := 0; i < 3; i++ {
+	for {
 		_, err = c.Conn.Write(b)
 		if err != nil {
 			fmt.Println(err)
 		}
-		time.Sleep(time.Second)
 	}
-	c.Conn.Close()
-	fmt.Println(s.Conns)
 }

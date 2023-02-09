@@ -8,6 +8,7 @@ type Hook interface {
 	Post(net.Conn) error
 }
 
+//特定场景上线广播
 type DefaultHook struct {
 	Ser *Server
 }

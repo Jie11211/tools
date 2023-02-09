@@ -27,5 +27,4 @@ func TestHttptool(t *testing.T) {
 		fmt.Println(err)
 	}
 	fmt.Println(string(x))
-
 }

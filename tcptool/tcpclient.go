@@ -54,5 +54,5 @@ func (c *Client) AddHook(id uint32, hook Hook) error {
 		c.Hook[id] = hook
 		return nil
 	}
-	return ErrHookExit
+	return ErrHookExist
 }

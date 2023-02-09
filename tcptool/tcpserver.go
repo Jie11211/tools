@@ -12,7 +12,8 @@ const (
 )
 
 var (
-	ErrHookExit = errors.New("HookExist")
+	ErrHookExist    = errors.New("HookExist")
+	ErrConnNotExist = errors.New("ConnNotExist")
 )
 
 type Server struct {
@@ -107,7 +108,19 @@ func (s *Server) AddHook(id uint32, hook Hook) error {
 		s.Hook[id] = hook
 		return nil
 	}
-	return ErrHookExit
+	return ErrHookExist
+}
+
+func (s *Server) Write(dp DataPack, id uint, data string, name string) error {
+	if connTool, ok := s.Conns[name]; ok {
+		_, err := connTool.Conn.Write(dp.Pack(Msg{
+			Id:     uint32(id),
+			Data:   []byte(data),
+			MsgLen: uint32(len([]byte(data))),
+		}))
+		return err
+	}
+	return ErrConnNotExist
 }
 
 // TODO 读写分离

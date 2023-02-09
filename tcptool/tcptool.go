@@ -6,5 +6,8 @@ type TcpTool struct {
 }
 
 func NewTcpTool() *TcpTool {
-	return &TcpTool{}
+	return &TcpTool{
+		Server: NewServer(false),
+		Client: NewClient(),
+	}
 }
