@@ -87,8 +87,8 @@ func (ospan *OpenSpan) AddHeader(request *http.Request, tranceName, spanName str
 func (tr *TranceProvider) GetSpanByHttpHeader(c context.Context, header *http.Header, tranceName, spanName, funcName string) (context.Context, opentrace.Span, error) {
 	propagator := otel.GetTextMapPropagator()
 	pctx := propagator.Extract(c, propagation.HeaderCarrier(*header))
-	traceID := header.Get("tranceName")
-	spanID := header.Get("spanName")
+	traceID := header.Get(tranceName)
+	spanID := header.Get(spanName)
 
 	//解析出id
 	spanid, err := opentrace.SpanIDFromHex(spanID)
