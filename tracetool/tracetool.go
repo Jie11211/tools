@@ -59,7 +59,7 @@ func NewTraceProvider(url string, attribute ...attribute.KeyValue) *TraceProvide
 		trace.WithResource(newResource(attribute...)),
 	)
 	otel.SetTracerProvider(tp)
-	return &TraceProvider{Tp: tp}
+	return &TraceProvider{Tp: tp, Span: make(map[string]*OpenSpan)}
 }
 
 func (tr *TraceProvider) Shutdown(ctx context.Context) error {
