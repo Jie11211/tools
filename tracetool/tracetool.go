@@ -1,4 +1,4 @@
-package trancetool
+package tracetool
 
 import (
 	"context"
@@ -14,10 +14,11 @@ import (
 	opentrace "go.opentelemetry.io/otel/trace"
 )
 
-type TranceProvider struct {
+type TraceProvider struct {
 	Tp   *trace.TracerProvider
 	Span map[string]*OpenSpan
 }
+
 type OpenSpan struct {
 	Ctx  context.Context
 	Span opentrace.Span
@@ -50,7 +51,7 @@ func NewKeyValue(name, version string, attributeMap map[string]string) (attrKeyV
 	return
 }
 
-func NewTranceProvider(url string, attribute ...attribute.KeyValue) *TranceProvider {
+func NewTraceProvider(url string, attribute ...attribute.KeyValue) *TraceProvider {
 	exp, _ := newExporter(url)
 	// 创建链路生成器,这里将导出器与资源信息配置进去.
 	tp := trace.NewTracerProvider(
@@ -58,14 +59,14 @@ func NewTranceProvider(url string, attribute ...attribute.KeyValue) *TranceProvi
 		trace.WithResource(newResource(attribute...)),
 	)
 	otel.SetTracerProvider(tp)
-	return &TranceProvider{Tp: tp}
+	return &TraceProvider{Tp: tp}
 }
 
-func (tr *TranceProvider) Shutdown(ctx context.Context) error {
+func (tr *TraceProvider) Shutdown(ctx context.Context) error {
 	return tr.Tp.Shutdown(ctx)
 }
 
-func (tr *TranceProvider) NewSpan(ctx context.Context, tranceName, spanName string) (context.Context, opentrace.Span) {
+func (tr *TraceProvider) NewSpan(ctx context.Context, tranceName, spanName string) (context.Context, opentrace.Span) {
 	startCtx, span := otel.Tracer(tranceName).Start(ctx, spanName)
 	if _, ok := tr.Span[spanName]; !ok {
 		tr.Span[spanName] = &OpenSpan{
@@ -77,14 +78,7 @@ func (tr *TranceProvider) NewSpan(ctx context.Context, tranceName, spanName stri
 	return tr.Span[spanName].Ctx, tr.Span[spanName].Span
 }
 
-func (ospan *OpenSpan) AddHeader(request *http.Request, tranceName, spanName string) {
-	request.Header.Set(tranceName, ospan.Span.SpanContext().TraceID().String())
-	request.Header.Set(spanName, ospan.Span.SpanContext().SpanID().String())
-	p := otel.GetTextMapPropagator()
-	p.Inject(ospan.Ctx, propagation.HeaderCarrier(request.Header))
-}
-
-func (tr *TranceProvider) GetSpanByHttpHeader(c context.Context, header *http.Header, tranceName, spanName, funcName string) (context.Context, opentrace.Span, error) {
+func (tr *TraceProvider) GetSpanByHttpHeader(c context.Context, header *http.Header, tranceName, spanName, funcName string) (context.Context, opentrace.Span, error) {
 	propagator := otel.GetTextMapPropagator()
 	pctx := propagator.Extract(c, propagation.HeaderCarrier(*header))
 	traceID := header.Get(tranceName)
@@ -110,4 +104,11 @@ func (tr *TranceProvider) GetSpanByHttpHeader(c context.Context, header *http.He
 	sctx := opentrace.ContextWithRemoteSpanContext(pctx, spanCtx)
 	ctx, s := tr.Tp.Tracer(funcName).Start(sctx, funcName)
 	return ctx, s, nil
+}
+
+func (ospan *OpenSpan) AddHeader(request *http.Request, tranceName, spanName string) {
+	request.Header.Set(tranceName, ospan.Span.SpanContext().TraceID().String())
+	request.Header.Set(spanName, ospan.Span.SpanContext().SpanID().String())
+	p := otel.GetTextMapPropagator()
+	p.Inject(ospan.Ctx, propagation.HeaderCarrier(request.Header))
 }
