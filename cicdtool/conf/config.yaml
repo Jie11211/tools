@@ -1,0 +1,24 @@
+GIT:
+    Used: true
+    PrivateFilePath: "./TEST"
+
+Docker:
+    Used: true
+    ImageUrl: "xxx.xxx.xxx"
+    UserName: ""
+    PassWord: " "
+
+K8s:
+    ConfigPath: "/etc/kubernetes/admin.conf"
+
+Resource:
+    - kind: "pod"
+      replicase: 1 # 默认为一，若资源为rs rc deploy damonset sts 可以大于1
+    - kind: "deploy"
+      replicase: 2 # 默认为一，若资源为rs rc deploy damonset sts 可以大于1
+    - kind: "service"
+      replicase: 1 # 默认为一，若资源为rs rc deploy damonset sts 可以大于1
+    - kind: "ingrress"
+      replicase: 1 # 默认为一，若资源为rs rc deploy damonset sts 可以大于1, 0为未启用
+
+
