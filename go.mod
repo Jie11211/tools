@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/Shopify/sarama v1.37.2
 	github.com/go-redsync/redsync/v4 v4.8.1
+	github.com/gorilla/websocket v1.5.0
 	github.com/redis/go-redis/v9 v9.0.2
 	github.com/xuri/excelize/v2 v2.7.0
 	go.opentelemetry.io/otel v1.13.0
