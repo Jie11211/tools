@@ -15,7 +15,7 @@ func NewConf() *Conf {
 
 func (cf *Conf) LoadConfigWithPath(path string, confType ...confType) map[string]interface{} {
 	viper.SetConfigFile(path)
-	viper.SetConfigType("yaml")
+	viper.SetConfigType(string(Yaml))
 	if len(confType) > 0 {
 		viper.SetConfigType(string(confType[0]))
 	}
@@ -31,7 +31,7 @@ func (cf *Conf) LoadConfigWithPath(path string, confType ...confType) map[string
 }
 
 func (cf *Conf) LoadConfigWithStr(data string, confType ...confType) map[string]interface{} {
-	viper.SetConfigType("yaml")
+	viper.SetConfigType(string(Yaml))
 	if len(confType) > 0 {
 		viper.SetConfigType(string(confType[0]))
 	}
