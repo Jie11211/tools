@@ -31,12 +31,16 @@ func newExporter(url string) (*jaeger.Exporter, error) {
 // semconv.ServiceNameKey.String(name),
 // semconv.ServiceVersionKey.String(version),
 // attribute.String("environment", "demo"),
-func newResource(attribute ...attribute.KeyValue) *resource.Resource {
-	r, _ := resource.Merge(
-		resource.Default(),
-		resource.NewWithAttributes(
-			semconv.SchemaURL,
-			attribute...,
+func newResource(server string, attribute ...attribute.KeyValue) *resource.Resource {
+	r, _ := resource.New(
+		context.Background(),
+		resource.WithFromEnv(), //将环境变量中的属性添加到配置的资源中。
+		resource.WithProcess(),
+		resource.WithTelemetrySDK(), //版本信息
+		resource.WithHost(),         //主机属性
+		resource.WithAttributes(
+			//服务名称
+			semconv.ServiceNameKey.String(server),
 		),
 	)
 	return r
@@ -51,12 +55,12 @@ func NewKeyValue(name, version string, attributeMap map[string]string) (attrKeyV
 	return
 }
 
-func NewTraceProvider(url string, attribute ...attribute.KeyValue) *TraceProvider {
+func NewTraceProvider(url, server string, attribute ...attribute.KeyValue) *TraceProvider {
 	exp, _ := newExporter(url)
 	// 创建链路生成器,这里将导出器与资源信息配置进去.
 	tp := trace.NewTracerProvider(
 		trace.WithBatcher(exp),
-		trace.WithResource(newResource(attribute...)),
+		trace.WithResource(newResource(server, attribute...)),
 	)
 	otel.SetTracerProvider(tp)
 	return &TraceProvider{Tp: tp, Span: make(map[string]*OpenSpan)}
